@@ -36,4 +36,4 @@ lerna-debug.log*
 .idea/
 *.iml
 
-.emv
+.env
