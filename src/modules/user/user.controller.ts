@@ -1,11 +1,13 @@
-import {Body, Controller, Delete, Get, Param, Patch, Post, UseGuards} from "@nestjs/common";
-import {UserService} from './user.service';
-import {User} from './entity/user.entity';
-import {CreateUserDto} from './dto/create-user.dto';
-import {DeleteResult} from "typeorm";
-import {UpdateUserDto} from "./dto/update-user.dto";
-import {JwtAuthGuard} from "../auth/guards/jwt-auth.guard";
+import { Body, Controller, Delete, Get, Param, Patch, Post, Request, UseGuards } from '@nestjs/common';
+import { UserService } from './user.service';
+import { User } from './entity/user.entity';
+import { CreateUserDto } from './dto/create-user.dto';
+import { DeleteResult } from 'typeorm';
+import { UpdateUserDto } from './dto/update-user.dto';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
+// ToDo: implement proper authorization as these routes
+//  shouldn't be accessible by normal users
 @UseGuards(JwtAuthGuard)
 @Controller('users')
 export class UserController {
