@@ -1,10 +1,12 @@
-import {Module} from '@nestjs/common';
-import {ConfigModule} from '@nestjs/config';
-import {AppController} from './app.controller';
-import {AppService} from './app.service';
-import {TypeOrmModule} from "@nestjs/typeorm";
-import {UserModule} from "../user/user.module";
-import {AuthModule} from "../auth/auth.module";
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { UserModule } from '../user/user.module';
+import { AuthModule } from '../auth/auth.module';
+import { QuoteModule } from '../quote/quote.module';
+import { RequestLoggingMiddleware } from '../../common/middleware/request-logging.middleware';
 
 @Module({
     imports: [
@@ -14,6 +16,7 @@ import {AuthModule} from "../auth/auth.module";
         }),
         AuthModule,
         UserModule,
+        QuoteModule,
         TypeOrmModule.forRoot({
             type: 'postgres',
             host: process.env.DATABASE_HOST || 'localhost',
