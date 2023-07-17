@@ -12,7 +12,7 @@ import { RequestLoggingMiddleware } from '../../common/middleware/request-loggin
     imports: [
         ConfigModule.forRoot({
             isGlobal: true,
-            envFilePath: ['.env', '../.env']
+            envFilePath: ['.env', '../.env'],
         }),
         AuthModule,
         UserModule,
@@ -33,4 +33,8 @@ import { RequestLoggingMiddleware } from '../../common/middleware/request-loggin
     controllers: [AppController],
     providers: [AppService],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+    configure(consumer: MiddlewareConsumer): any {
+        consumer.apply(RequestLoggingMiddleware).forRoutes('*');
+    }
+}
