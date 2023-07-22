@@ -52,9 +52,6 @@ export class QuoteController {
         if (!quote)
             throw new NotFoundException('Invalid quote ID');
 
-        if (quote.user.id !== req.user.id)
-            throw new UnauthorizedException('You are not authorized to update this quote');
-
         // ToDo: consider returning something like 'Already upvoted'
         return await this.quoteService.upvote(quote.id, req.user.id);
     }
@@ -74,9 +71,6 @@ export class QuoteController {
         const quote: Quote = await this.quoteService.findOne(quoteId);
         if (!quote)
             throw new NotFoundException('Invalid quote ID');
-
-        if (quote.user.id !== req.user.id)
-            throw new UnauthorizedException('You are not authorized to update this quote');
 
         return await this.quoteService.downvote(quote.id, req.user.id);
     }

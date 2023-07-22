@@ -15,7 +15,7 @@ export class AuthService {
     ) {}
 
     async validate(loginDto: LoginDto) {
-        const user: User = await this.userService.getByEmail(loginDto.email);
+        const user: User = await this.userService.getByEmailWithPassword(loginDto.email);
         if (!user) throw new NotFoundException('User does not exists');
         if (!(await bcrypt.compare(loginDto.password, user.password)))
             throw new BadRequestException('Password mismatch');
@@ -35,7 +35,7 @@ export class AuthService {
     }
 
     async updatePassword(userId: number, passwordUpdateDto: PasswordUpdateDto) {
-        const user: User = await this.userService.getById(userId);
+        const user: User = await this.userService.getByIdWithPassword(userId);
         if (!user) throw new NotFoundException('User does not exist');
         if (
             !(await bcrypt.compare(passwordUpdateDto.currentPassword, user.password))
