@@ -1,19 +1,22 @@
-import {Module} from '@nestjs/common';
-import {ConfigModule} from '@nestjs/config';
-import {AppController} from './app.controller';
-import {AppService} from './app.service';
-import {TypeOrmModule} from "@nestjs/typeorm";
-import {UserModule} from "../user/user.module";
-import {AuthModule} from "../auth/auth.module";
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { UserModule } from '../user/user.module';
+import { AuthModule } from '../auth/auth.module';
+import { QuoteModule } from '../quote/quote.module';
+import { RequestLoggingMiddleware } from '../../common/middleware/request-logging.middleware';
 
 @Module({
     imports: [
         ConfigModule.forRoot({
             isGlobal: true,
-            envFilePath: ['.env', '../.env']
+            envFilePath: ['.env', '../.env'],
         }),
         AuthModule,
         UserModule,
+        QuoteModule,
         TypeOrmModule.forRoot({
             type: 'postgres',
             host: process.env.DATABASE_HOST || 'localhost',
@@ -30,4 +33,8 @@ import {AuthModule} from "../auth/auth.module";
     controllers: [AppController],
     providers: [AppService],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+    configure(consumer: MiddlewareConsumer): any {
+        consumer.apply(RequestLoggingMiddleware).forRoutes('*');
+    }
+}

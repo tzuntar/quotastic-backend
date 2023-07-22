@@ -1,4 +1,6 @@
-import {Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn} from "typeorm";
+import { Column, CreateDateColumn, Entity, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
+import { Quote } from '../../quote/entities/quote.entity';
+import { Exclude } from 'class-transformer';
 
 @Entity()
 export class User {
@@ -14,13 +16,14 @@ export class User {
     @Column()
     email: string;
 
-    @Column()
+    @Column({ select: false })
+    @Exclude()
     password?: string;
 
-    @Column({default: 0})
+    @Column({ default: 0 })
     karma?: number;
 
-    @Column({nullable: true})
+    @Column({ nullable: true })
     avatarUrl?: string;
 
     @CreateDateColumn()
@@ -29,7 +32,10 @@ export class User {
     @UpdateDateColumn()
     updatedAt?: Date;
 
-    //@OneToMany(() => Quote, (quote) => quote.user)
-    //quotes: Quote[];
+    @Column({ default: 0, select: false })
+    @Exclude()
+    isAdmin?: number;
 
+    @OneToMany(() => Quote, (quote) => quote.user)
+    quotes: Quote[];
 }

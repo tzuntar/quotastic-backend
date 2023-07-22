@@ -7,7 +7,7 @@ import { CurrentUserController } from './current-user.controller';
 
 @Module({
     imports: [TypeOrmModule.forFeature([User])],
-    controllers: [CurrentUserController, UserController],
+    controllers: [CurrentUserController /*UserController*/],
     providers: [UserService],
 })
 export class UserModule {}

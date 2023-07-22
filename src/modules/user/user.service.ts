@@ -27,8 +27,22 @@ export class UserService {
         return this.userRepository.findOneBy({ id });
     }
 
+    async getByIdWithPassword(id: number): Promise<User> {
+        return this.userRepository.findOne({
+            select: {password: true},
+            where: {id}
+        });
+    }
+
     async getByEmail(email: string): Promise<User> {
         return this.userRepository.findOneBy({ email });
+    }
+
+    async getByEmailWithPassword(email: string): Promise<User> {
+        return this.userRepository.findOne({
+            select: {password: true},
+            where: {email}
+        });
     }
 
     async deleteUser(id: number): Promise<DeleteResult> {
