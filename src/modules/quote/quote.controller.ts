@@ -1,17 +1,8 @@
-import {
-    Controller,
-    Get,
-    NotFoundException,
-    Param,
-    Post, Query,
-    Request,
-    UnauthorizedException,
-    UseGuards,
-} from '@nestjs/common';
+import { Controller, Get, NotFoundException, Param, Post, Query, Request, UseGuards } from '@nestjs/common';
 import { QuoteService } from './quote.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { Quote } from './entities/quote.entity';
-import { QuoteReaction } from './entities/quote-reaction.entity';
+import { Quote } from '../../entities/quote.entity';
+import { QuoteReaction } from '../../entities/quote-reaction.entity';
 
 /**
  * Controller responsible for /quotes routes.
@@ -31,7 +22,7 @@ export class QuoteController {
     @Get()
     async getQuotes(
         @Query('page') page: number = 1,
-        @Query('limit') limit: number = 10
+        @Query('limit') limit: number = 10,
     ): Promise<Quote[]> {
         return await this.quoteService.findPaginated(page, limit);
     }
@@ -40,15 +31,15 @@ export class QuoteController {
      * Upvotes this quote by the current user.
      *
      * @param {Request} req - Request with the current auth session.
-     * @param {number} quoteId - Quote's ID.
+     * @param {string} id - Quote's ID.
      * @returns {Promise<QuoteReaction>} - Resulting reaction.
      */
     @Post(':id/upvote')
     async postQuoteUpvote(
         @Request() req,
-        @Param('id') quoteId: number,
+        @Param('id') id: string,
     ): Promise<QuoteReaction> {
-        const quote: Quote = await this.quoteService.findOne(quoteId);
+        const quote: Quote = await this.quoteService.findById(id);
         if (!quote)
             throw new NotFoundException('Invalid quote ID');
 
@@ -60,15 +51,15 @@ export class QuoteController {
      * Downvotes this quote by the current user.
      *
      * @param {Request} req - Current auth session.
-     * @param {number} quoteId - Quote's ID.
+     * @param {string} id - Quote's ID.
      * @returns {Promise<QuoteReaction>} - Resulting reaction.
      */
     @Post(':id/downvote')
     async postQuoteDownvote(
         @Request() req,
-        @Param('id') quoteId: number,
+        @Param('id') id: string,
     ): Promise<QuoteReaction> {
-        const quote: Quote = await this.quoteService.findOne(quoteId);
+        const quote: Quote = await this.quoteService.findById(id);
         if (!quote)
             throw new NotFoundException('Invalid quote ID');
 
@@ -78,14 +69,14 @@ export class QuoteController {
     /**
      * Retrieves the quote with this ID.
      *
-     * @param {number} quoteId - Quote's ID.
+     * @param {string} id - Quote's ID.
      * @returns {Promise<Quote>} - Resulting quote.
      */
     @Get(':id')
     async getQuoteById(
-        @Param('id') quoteId: number,
+        @Param('id') id: string,
     ): Promise<Quote> {
-        return await this.quoteService.findOne(quoteId);
+        return await this.quoteService.findById(id);
     }
 
 }

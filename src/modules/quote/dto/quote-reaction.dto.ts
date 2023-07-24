@@ -1,5 +1,5 @@
-import { IsIn, IsNotEmpty, IsNumber, IsString } from 'class-validator';
-import { QuoteReactionType } from '../entities/quote-reaction.entity';
+import { IsIn, IsNotEmpty, IsString } from 'class-validator';
+import { QuoteReactionType } from '../../../entities/quote-reaction.entity';
 
 export class QuoteReactionDto {
     @IsString()
@@ -8,6 +8,6 @@ export class QuoteReactionDto {
     type: QuoteReactionType;
 
     @IsNotEmpty()
-    @IsNumber()
-    userId: number;
+    @IsString()
+    userId: string;
 }
