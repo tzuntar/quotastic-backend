@@ -12,7 +12,7 @@ import {
 import { QuoteService } from './quote.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CreateQuoteDto } from './dto/create-quote.dto';
-import { Quote } from './entities/quote.entity';
+import { Quote } from '../../entities/quote.entity';
 import { UpdateQuoteDto } from './dto/update-quote.dto';
 
 /**
@@ -35,31 +35,38 @@ export class UserQuoteController {
         @Request() req,
         @Body() createQuoteDto: CreateQuoteDto,
     ): Promise<Quote> {
-        return this.quoteService.create(createQuoteDto, req.user.id);
+        return this.quoteService.create({
+            ...createQuoteDto,
+            userId: req.user.id,    // ensures that the user cannot pass
+                                    // the ID of another user through the DTO
+        });
     }
 
     /**
      * Updates a quote owned by the current user.
      *
      * @param {Request} req - Request with the current auth session.
-     * @param {number} quoteId - ID of the quote to update.
+     * @param {string} id - ID of the quote to update.
      * @param {UpdateQuoteDto} updateQuoteDto - Updated quote data.
      * @returns {Promise<Quote>} - Resulting updated quote.
      */
     @Patch('myquote/:id')
     async updateOwnQuote(
         @Request() req,
-        @Param('id') quoteId: number,
+        @Param('id') id: string,
         @Body() updateQuoteDto: UpdateQuoteDto,
     ): Promise<Quote> {
-        const quote: Quote = await this.quoteService.findOne(quoteId);
+        const quote: Quote = await this.quoteService.findById(id);
         if (!quote)
             throw new NotFoundException('Invalid quote ID');
 
         if (quote.user.id !== req.user.id)
             throw new UnauthorizedException('You are not authorized to update this quote');
 
-        return await this.quoteService.update(quote.id, updateQuoteDto);
+        return await this.quoteService.update(quote.id, {
+            ...updateQuoteDto,
+            userId: req.user.id,
+        });
     }
 
 }

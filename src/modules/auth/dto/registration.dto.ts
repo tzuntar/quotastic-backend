@@ -1,4 +1,5 @@
 import { IsEmail, IsNotEmpty, MinLength } from 'class-validator';
+import { Match } from '../../../annotations/match.decorator';
 
 export class RegistrationDto {
     @IsNotEmpty()
@@ -14,4 +15,8 @@ export class RegistrationDto {
     @IsNotEmpty()
     @MinLength(8)
     password: string;
+
+    @IsNotEmpty()
+    @Match('password', { message: 'Passwords do not match' })
+    passwordConfirmation: string;
 }

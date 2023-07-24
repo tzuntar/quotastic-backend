@@ -2,28 +2,45 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { CreateQuoteDto } from './dto/create-quote.dto';
 import { UpdateQuoteDto } from './dto/update-quote.dto';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Quote } from './entities/quote.entity';
-import { DeleteResult, Repository } from 'typeorm';
-import { QuoteReaction, QuoteReactionType } from './entities/quote-reaction.entity';
+import { Quote } from '../../entities/quote.entity';
+import { DeleteResult, FindManyOptions, FindOneOptions, Repository } from 'typeorm';
+import { QuoteReaction, QuoteReactionType } from '../../entities/quote-reaction.entity';
 import { QuoteReactionDto } from './dto/quote-reaction.dto';
+import { AbstractService } from '../common/abstract.service';
 
 @Injectable()
-export class QuoteService {
+export class QuoteService extends AbstractService<Quote> {
     constructor(
         @InjectRepository(Quote) private readonly quoteRepository: Repository<Quote>,
         @InjectRepository(QuoteReaction) private readonly quoteReactionRepository: Repository<QuoteReaction>,
-    ) {}
+    ) {
+        super(quoteRepository);
+    }
 
-    async findOne(id: number): Promise<Quote> {
+    override async findOne(options: FindOneOptions<Quote>): Promise<Quote> {
+        return this.quoteRepository.findOne({
+            relations: {
+                user: true,
+            },
+            ...options,
+        });
+    }
+
+    override async findById(id: string, options?: FindOneOptions<Quote>): Promise<Quote> {
         return this.quoteRepository.findOne({
             where: { id },
             relations: {
                 user: true,
             },
+            ...options,
         });
     }
 
-    async findPaginated(page: number, limit: number): Promise<Quote[]> {
+    override async findPaginated(
+        page: number = 1,
+        limit: number = 10,
+        options?: FindManyOptions<Quote>,
+    ): Promise<Quote[]> {
         const skip = (page - 1) * limit;
         return this.quoteRepository.find({
             relations: {
@@ -32,27 +49,28 @@ export class QuoteService {
             },
             skip: skip,
             take: limit,
+            ...options,
         });
     }
 
-    async create(createQuoteDto: CreateQuoteDto, userId: number): Promise<Quote> {
+    override async create(createQuoteDto: CreateQuoteDto): Promise<Quote> {
         const quote: Quote = await this.quoteRepository.create({
             ...createQuoteDto,
-            user: { id: userId },
+            user: { id: createQuoteDto.userId },
         });
         return this.quoteRepository.save(quote);
     }
 
-    async update(id: number, updateQuoteDto: UpdateQuoteDto): Promise<Quote> {
+    override async update(id: string, updateQuoteDto: UpdateQuoteDto): Promise<Quote> {
         await this.quoteRepository.update(id, updateQuoteDto);
-        return this.findOne(id);
+        return this.findOne({ where: { id } });
     }
 
-    async remove(id: number): Promise<DeleteResult> {
+    override async delete(id: string): Promise<DeleteResult> {
         return this.quoteRepository.delete({ id });
     }
 
-    async upvote(id: number, userId: number): Promise<QuoteReaction> {
+    async upvote(id: string, userId: string): Promise<QuoteReaction> {
         await this.quoteReactionRepository.delete({
             user: { id: userId }, id: id,
         });
@@ -66,7 +84,7 @@ export class QuoteService {
         return reaction;
     }
 
-    async downvote(id: number, userId: number): Promise<QuoteReaction> {
+    async downvote(id: string, userId: string): Promise<QuoteReaction> {
         await this.quoteReactionRepository.delete({
             user: { id: userId }, id: id,
         });
