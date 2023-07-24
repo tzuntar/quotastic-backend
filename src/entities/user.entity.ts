@@ -28,7 +28,7 @@ export class User extends AbstractEntity {
     @Column({ nullable: true })
     avatarUrl?: string;
 
-    @Column({ default: 0, select: false })
+    @Column({ default: 0 })
     @Exclude()
     isAdmin: number;
 
