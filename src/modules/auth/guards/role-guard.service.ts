@@ -3,17 +3,18 @@ import { JwtService } from '@nestjs/jwt';
 import { Reflector } from '@nestjs/core';
 
 @Injectable()
-export class AdminGuard implements CanActivate {
+export class RoleGuard implements CanActivate {
     constructor(
         private readonly jwtService: JwtService,
-        private readonly reflector: Reflector
+        private readonly reflector: Reflector,
     ) {}
 
     async canActivate(context: ExecutionContext): Promise<boolean> {
         const request = context.switchToHttp().getRequest();
+        const roles = this.reflector.get<string[]>('roles', context.getHandler());
+        if (!roles) return true;
 
-        // FixMe: check for admin privileges
-
-        return false;
+        // ToDo: check for admin permissions
+        return !roles.includes('admin');
     }
 }

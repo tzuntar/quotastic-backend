@@ -1,55 +1,36 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DeleteResult, Repository } from 'typeorm';
+import { DeleteResult, FindOneOptions, Repository } from 'typeorm';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import * as bcrypt from 'bcrypt';
-import { User } from './entity/user.entity';
+import { User } from '../../entities/user.entity';
+import { AbstractService } from '../common/abstract.service';
 
 @Injectable()
-export class UserService {
+export class UserService extends AbstractService<User> {
     constructor(
         @InjectRepository(User) private readonly userRepository: Repository<User>,
-    ) {}
-
-    async getAll(): Promise<User[]> {
-        return await this.userRepository.find();
+    ) {
+        super(userRepository);
     }
 
-    async addUser(createUserDto: CreateUserDto): Promise<User> {
+    override async create(createUserDto: CreateUserDto): Promise<User> {
         const hashed = await bcrypt.hash(createUserDto.password, 10);
         const data = { ...createUserDto, password: hashed };
         const user = this.userRepository.create(data);
         return await this.userRepository.save(user);
     }
 
-    async getById(id: number): Promise<User> {
-        return this.userRepository.findOneBy({ id });
+    override async findById(id: string, options?: FindOneOptions<User>): Promise<User> {
+        return this.userRepository.findOne({ where: { id }, ...options });
     }
 
-    async getByIdWithPassword(id: number): Promise<User> {
-        return this.userRepository.findOne({
-            select: {password: true},
-            where: {id}
-        });
+    async findByEmail(email: string, options?: FindOneOptions<User>): Promise<User> {
+        return this.userRepository.findOne({ where: { email }, ...options });
     }
 
-    async getByEmail(email: string): Promise<User> {
-        return this.userRepository.findOneBy({ email });
-    }
-
-    async getByEmailWithPassword(email: string): Promise<User> {
-        return this.userRepository.findOne({
-            select: {password: true},
-            where: {email}
-        });
-    }
-
-    async deleteUser(id: number): Promise<DeleteResult> {
-        return this.userRepository.delete(id);
-    }
-
-    async userUpdate(id: number, updateUserDto: UpdateUserDto): Promise<User> {
+    override async update(id: string, updateUserDto: UpdateUserDto): Promise<User> {
         if (updateUserDto.password != null) {
             const hashed = await bcrypt.hash(updateUserDto.password, 10);
             const data = { ...updateUserDto, password: hashed };
@@ -57,6 +38,10 @@ export class UserService {
         } else {
             await this.userRepository.update(id, updateUserDto);
         }
-        return this.getById(id);
+        return this.findById(id);
+    }
+
+    async delete(id: string): Promise<DeleteResult> {
+        return this.userRepository.delete({ id });
     }
 }
