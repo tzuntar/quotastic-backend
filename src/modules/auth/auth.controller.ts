@@ -1,45 +1,59 @@
-import { Body, Controller, Get, Patch, Post, Request, UnauthorizedException, UseGuards } from '@nestjs/common';
+import {
+    Body,
+    ClassSerializerInterceptor,
+    Controller,
+    HttpCode,
+    HttpStatus, Param,
+    Post,
+    Req,
+    Request,
+    UnauthorizedException,
+    UseGuards,
+    UseInterceptors,
+} from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LocalAuthGuard } from './guards/local-auth.guard';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { RegistrationDto } from './dto/registration.dto';
-import { PasswordUpdateDto } from './dto/password-update.dto';
-import { User } from '../user/entity/user.entity';
+import { TokenPayload } from '../../interfaces/auth.interface';
+import { User } from '../../entities/user.entity';
 
 @Controller()
+@UseInterceptors(ClassSerializerInterceptor)
 export class AuthController {
-    constructor(private readonly authService: AuthService) {}
+    constructor(
+        private readonly authService: AuthService) {}
 
     @UseGuards(LocalAuthGuard)
     @Post('login')
+    @HttpCode(HttpStatus.OK)
     login(@Request() req) {
         return req.user;
     }
 
     @Post('signup')
-    async signup(@Body() registrationDto: RegistrationDto) {
+    @HttpCode(HttpStatus.CREATED)
+    async signup(@Body() registrationDto: RegistrationDto): Promise<User> {
         const user = await this.authService.register(registrationDto);
         if (!user) throw new UnauthorizedException();
         return user;
     }
 
     @UseGuards(JwtAuthGuard)
-    @Get('session')
-    profile(@Request() req) {
-        return req.user;
+    @Post('signout')
+    @HttpCode(HttpStatus.OK)
+    async signout(@Req() req) {
+        return this.authService.logout(req.user.id);
     }
 
     @UseGuards(JwtAuthGuard)
-    @Patch('/me/update-password')
-    async updatePassword(
-        @Request() req,
-        @Body() passwordUpdateDto: PasswordUpdateDto,
-    ): Promise<User> {
-        const newUser: User = await this.authService.updatePassword(
-            req.id,
-            passwordUpdateDto,
-        );
-        const { password, ...userWithoutPass } = newUser;
-        return userWithoutPass;
+    @Post('refresh')
+    @HttpCode(HttpStatus.ACCEPTED)
+    async refreshAccessToken(
+        @Req() req,
+        @Param('refresh_token') refreshToken: string
+    ): Promise<TokenPayload> {
+        return this.authService.refreshAccessToken(req.user.id, refreshToken);
     }
+
 }
