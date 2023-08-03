@@ -6,7 +6,7 @@ const FileType = import('file-type');
 
 export class LocalFilestore {
 
-    private static readonly validImageExtesions = ['png', 'jpg', 'jpeg'];
+    private static readonly validImageExtensions = ['png', 'jpg', 'jpeg'];
     private static readonly validImageMimes = ['image/png', 'image/jpg', 'image/jpeg'];
 
     static readonly storeImageFile: Options = {
@@ -29,7 +29,7 @@ export class LocalFilestore {
         return (await FileType).fileTypeFromFile(fullPath)
             .then(extAndMimeType => {
                 if (!extAndMimeType?.ext || !extAndMimeType?.mime) return false;
-                return this.validImageExtesions.includes(extAndMimeType.ext)
+                return this.validImageExtensions.includes(extAndMimeType.ext)
                     && this.validImageMimes.includes(extAndMimeType.mime);
             });
     }
