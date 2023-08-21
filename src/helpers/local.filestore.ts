@@ -2,8 +2,6 @@ import * as fs from 'fs';
 import { extname } from 'path';
 import { diskStorage, Options } from 'multer';
 
-const FileType = import('file-type');
-
 export class LocalFilestore {
 
     private static readonly validImageExtensions = ['png', 'jpg', 'jpeg'];
@@ -25,14 +23,15 @@ export class LocalFilestore {
         },
     };
 
-    static async verifyImageFile(fullPath: string): Promise<boolean> {
+    // Disabled due to ESM interop problems
+    /*static async verifyImageFile(fullPath: string): Promise<boolean> {
         return (await FileType).fileTypeFromFile(fullPath)
             .then(extAndMimeType => {
                 if (!extAndMimeType?.ext || !extAndMimeType?.mime) return false;
                 return this.validImageExtensions.includes(extAndMimeType.ext)
                     && this.validImageMimes.includes(extAndMimeType.mime);
             });
-    }
+    }*/
 
     static unlink(fullPath: string) {
         fs.unlink(fullPath, (error) => {

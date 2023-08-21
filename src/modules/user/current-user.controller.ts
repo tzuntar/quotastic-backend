@@ -56,10 +56,11 @@ export class CurrentUserController {
         @Request() req,
         @UploadedFile() avatar: Express.Multer.File,
     ): Promise<User> {
-        if (!await LocalFilestore.verifyImageFile(avatar.path)) {
+        // Disabled due to ESM interop problems
+        /*if (!await LocalFilestore.verifyImageFile(avatar.path)) {
             LocalFilestore.unlink(avatar.path);
             throw new BadRequestException('Invalid file type, must be either JPG/JPEG or PNG.');
-        }
+        }*/
         return this.userService.update(req.user.id, { avatarUrl: avatar.path });
     }
 

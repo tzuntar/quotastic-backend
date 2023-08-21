@@ -1,4 +1,4 @@
-import { Column, Entity, OneToMany } from 'typeorm';
+import { Column, Entity, OneToMany, Unique } from 'typeorm';
 import { Quote } from './quote.entity';
 import { Exclude } from 'class-transformer';
 import { AbstractEntity } from './abstract.entity';
@@ -7,6 +7,7 @@ import { AbstractEntity } from './abstract.entity';
  * Represents a User of the application.
  */
 @Entity()
+@Unique(['email'])
 export class User extends AbstractEntity {
 
     @Column({ nullable: false })
