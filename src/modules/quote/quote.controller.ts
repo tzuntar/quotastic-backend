@@ -1,4 +1,15 @@
-import { Controller, Get, NotFoundException, Param, Post, Query, Request, UseGuards } from '@nestjs/common';
+import {
+    ClassSerializerInterceptor,
+    Controller,
+    Get,
+    NotFoundException,
+    Param,
+    Post,
+    Query,
+    Request,
+    UseGuards,
+    UseInterceptors,
+} from '@nestjs/common';
 import { QuoteService } from './quote.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { Quote } from '../../entities/quote.entity';
@@ -9,6 +20,7 @@ import { QuoteReaction } from '../../entities/quote-reaction.entity';
  */
 @Controller('quotes')
 @UseGuards(JwtAuthGuard)
+@UseInterceptors(ClassSerializerInterceptor)
 export class QuoteController {
     constructor(private readonly quoteService: QuoteService) {}
 

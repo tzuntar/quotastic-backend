@@ -1,4 +1,15 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
+import {
+    Body,
+    ClassSerializerInterceptor,
+    Controller,
+    Delete,
+    Get,
+    Param,
+    Patch,
+    Post,
+    UseGuards,
+    UseInterceptors,
+} from '@nestjs/common';
 import { UserService } from './user.service';
 import { User } from '../../entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -9,6 +20,7 @@ import { Roles } from '../../annotations/roles.decorator';
 import { RoleGuard } from '../auth/guards/role-guard.service';
 
 @UseGuards(JwtAuthGuard, RoleGuard)
+@UseInterceptors(ClassSerializerInterceptor)
 @Controller('users')
 export class UserController {
     constructor(private userService: UserService) {}
