@@ -9,6 +9,10 @@ async function bootstrap() {
             whitelist: true,
         }),
     );
+    app.enableCors({
+        origin: 'http://localhost:3000',
+        credentials: true
+    });
     const port: number = parseInt(process.env.PORT) || 8000;
     await app.listen(port);
 }
