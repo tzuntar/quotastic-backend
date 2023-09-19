@@ -27,13 +27,13 @@ export class AuthService {
         if (!user) throw new NotFoundException('User does not exists');
         if (!(await bcrypt.compare(loginDto.password, user.password)))
             throw new BadRequestException('Password mismatch');
-        return this.signJwt(user);
+        return {...user, ...await this.signJwt(user)};
     }
 
     async register(registrationDto: RegistrationDto) {
         const user: User = await this.userService.create({ ...registrationDto });
         if (!user) throw new BadRequestException('Invalid registration data');
-        return this.signJwt(user);
+        return {...user, ...await this.signJwt(user)};
     }
 
     async refreshAccessToken(userId: string, refreshToken: string) {
@@ -75,9 +75,9 @@ export class AuthService {
      * @private
      */
     private async signJwt(user: User): Promise<any> {
-        const payload = { email: user.email, sub: user.id };
+        const payload = { sub: user.id };
         return {
-            access_token: await this.jwtService.signAsync(payload),
+            accessToken: await this.jwtService.signAsync(payload),
         };
     }
 }
