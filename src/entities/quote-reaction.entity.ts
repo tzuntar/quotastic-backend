@@ -21,10 +21,11 @@ export class QuoteReaction extends AbstractEntity {
 
     @ManyToOne(() => User)
     @JoinColumn({ name: 'user' })
+    @IsNotEmpty()
     user: User;
 
-    @ManyToOne(() => Quote, (quote) => quote.id)
-    @JoinColumn({ name: 'quoteId' })
+    @ManyToOne(() => Quote, (quote) => quote.reactions)
+    @JoinColumn({ name: 'quote' })
     @IsNotEmpty()
     quote: Quote;
 

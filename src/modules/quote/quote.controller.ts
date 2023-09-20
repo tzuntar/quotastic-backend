@@ -6,14 +6,13 @@ import {
     Param,
     Post,
     Query,
-    Request,
-    UseGuards,
+    Request, UseGuards,
     UseInterceptors,
 } from '@nestjs/common';
 import { QuoteService } from './quote.service';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { Quote } from '../../entities/quote.entity';
-import { QuoteReaction } from '../../entities/quote-reaction.entity';
+import { QuoteReaction, QuoteReactionType } from '../../entities/quote-reaction.entity';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 /**
  * Controller responsible for /quotes routes.

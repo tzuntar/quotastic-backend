@@ -1,4 +1,4 @@
-import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, OneToMany } from 'typeorm';
 import { QuoteReaction } from './quote-reaction.entity';
 import { User } from './user.entity';
 import { AbstractEntity } from './abstract.entity';
@@ -21,7 +21,7 @@ export class Quote extends AbstractEntity {
     @IsNotEmpty()
     user: User;
 
-    @ManyToOne(() => QuoteReaction, (reaction) => reaction.quote)
+    @OneToMany(() => QuoteReaction, (reaction) => reaction.quote)
     reactions: QuoteReaction[];
 
 }
