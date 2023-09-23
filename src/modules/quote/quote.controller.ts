@@ -18,7 +18,6 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
  * Controller responsible for /quotes routes.
  */
 @Controller('quotes')
-@UseGuards(JwtAuthGuard)
 @UseInterceptors(ClassSerializerInterceptor)
 export class QuoteController {
     constructor(private readonly quoteService: QuoteService) {}
@@ -39,42 +38,56 @@ export class QuoteController {
     }
 
     /**
-     * Upvotes this quote by the current user.
+     * Retrieves the list of most liked quotes.
      *
-     * @param {Request} req - Request with the current auth session.
-     * @param {string} id - Quote's ID.
-     * @returns {Promise<QuoteReaction>} - Resulting reaction.
+     * @param {number} page - Page number (default: 1).
+     * @param {number} limit - Number of quotes per page (default: 10).
+     * @returns {Promise<Quote[]>} - Paginated list of top quotes.
      */
-    @Post(':id/upvote')
-    async postQuoteUpvote(
-        @Request() req,
-        @Param('id') id: string,
-    ): Promise<QuoteReaction> {
-        const quote: Quote = await this.quoteService.findById(id);
-        if (!quote)
-            throw new NotFoundException('Invalid quote ID');
-
-        // ToDo: consider returning something like 'Already upvoted'
-        return await this.quoteService.upvote(quote.id, req.user.id);
+    @Get('top')
+    async getTopQuotes(
+        @Query('page') page: number = 1,
+        @Query('limit') limit: number = 10,
+    ): Promise<Quote[]> {
+        return await this.quoteService.findPaginated(page, limit, {
+            where: {
+                reactions: {
+                    type: QuoteReactionType.Upvote,
+                },
+            },
+            order: {
+                reactions: { id: 'DESC' },
+            },
+        });
     }
 
     /**
-     * Downvotes this quote by the current user.
+     * Casts a vote on this quote.
+     * The vote can either be an upvote or a downvote.
+     * Leaving out the 'vote' parameter clears the vote.
      *
-     * @param {Request} req - Current auth session.
+     * @param {Request} req - Request with the current auth session.
      * @param {string} id - Quote's ID.
-     * @returns {Promise<QuoteReaction>} - Resulting reaction.
+     * @param {'upvote' | 'downvote' | null} voteType - The vote to cast or
+     * 'null' to clear any existing vote.
      */
-    @Post(':id/downvote')
-    async postQuoteDownvote(
+    @Post(':id/vote')
+    @UseGuards(JwtAuthGuard)
+    async postVote(
         @Request() req,
         @Param('id') id: string,
-    ): Promise<QuoteReaction> {
+        @Query('vote') voteType?: string,
+    ): Promise<QuoteReaction | void> {
         const quote: Quote = await this.quoteService.findById(id);
-        if (!quote)
-            throw new NotFoundException('Invalid quote ID');
-
-        return await this.quoteService.downvote(quote.id, req.user.id);
+        if (!quote) throw new NotFoundException('Invalid quote ID');
+        switch (voteType) {
+            case null:
+                return await this.quoteService.clearVote(quote.id, req.user.id);
+            case 'upvote':
+                return await this.quoteService.upvote(quote.id, req.user.id);
+            case 'downvote':
+                return await this.quoteService.downvote(quote.id, req.user.id);
+        }
     }
 
     /**
@@ -84,6 +97,7 @@ export class QuoteController {
      * @returns {Promise<Quote>} - Resulting quote.
      */
     @Get(':id')
+    @UseGuards(JwtAuthGuard)
     async getQuoteById(
         @Param('id') id: string,
     ): Promise<Quote> {

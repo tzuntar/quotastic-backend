@@ -98,4 +98,10 @@ export class QuoteService extends AbstractService<Quote> {
         return reaction;
     }
 
+    async clearVote(id: string, userId: string): Promise<void> {
+        await this.quoteReactionRepository.delete({
+            user: { id: userId }, id: id
+        });
+    }
+
 }
