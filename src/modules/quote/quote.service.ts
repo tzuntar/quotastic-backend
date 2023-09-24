@@ -1,11 +1,10 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { CreateQuoteDto } from './dto/create-quote.dto';
 import { UpdateQuoteDto } from './dto/update-quote.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Quote } from '../../entities/quote.entity';
 import { DeleteResult, FindManyOptions, FindOneOptions, Repository } from 'typeorm';
 import { QuoteReaction, QuoteReactionType } from '../../entities/quote-reaction.entity';
-import { QuoteReactionDto } from './dto/quote-reaction.dto';
 import { AbstractService } from '../common/abstract.service';
 
 @Injectable()
@@ -70,37 +69,49 @@ export class QuoteService extends AbstractService<Quote> {
         return this.quoteRepository.delete({ id });
     }
 
+    async getScore(quoteId: string): Promise<number> {
+        const reactions = await this.quoteReactionRepository.find({
+            where: {
+                quote: { id: quoteId },
+            },
+        });
+
+        return reactions.reduce((totalScore, reaction) => (
+            reaction.type === 'upvote' ? totalScore + 1 :
+                reaction.type === 'downvote' ? totalScore - 1 :
+                    totalScore
+        ), 0);
+    }
+
     async upvote(id: string, userId: string): Promise<QuoteReaction> {
         await this.quoteReactionRepository.delete({
-            user: { id: userId }, id: id,
+            user: { id: userId }, quote: { id: id },
         });
-        const dto: QuoteReactionDto = {
-            userId: userId,
-            type: QuoteReactionType.Upvote,
-        };
         const reaction: QuoteReaction = await this.quoteReactionRepository
-            .create(dto);
-        if (!reaction) throw new BadRequestException('Cannot upvote');
-        return reaction;
+            .create({
+                quote: { id: id },
+                user: { id: userId },
+                type: QuoteReactionType.Upvote,
+            });
+        return this.quoteReactionRepository.save(reaction);
     }
 
     async downvote(id: string, userId: string): Promise<QuoteReaction> {
         await this.quoteReactionRepository.delete({
-            user: { id: userId }, id: id,
+            user: { id: userId }, quote: { id: id },
         });
-        const dto: QuoteReactionDto = {
-            userId: userId,
-            type: QuoteReactionType.Downvote,
-        };
         const reaction: QuoteReaction = await this.quoteReactionRepository
-            .create(dto);
-        if (!reaction) throw new BadRequestException('Cannot downvote');
-        return reaction;
+            .create({
+                quote: { id: id },
+                user: { id: userId },
+                type: QuoteReactionType.Downvote,
+            });
+        return this.quoteReactionRepository.save(reaction);
     }
 
     async clearVote(id: string, userId: string): Promise<void> {
         await this.quoteReactionRepository.delete({
-            user: { id: userId }, id: id
+            user: { id: userId }, id: id,
         });
     }
 

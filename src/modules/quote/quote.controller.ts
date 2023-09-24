@@ -70,6 +70,7 @@ export class QuoteController {
      * @param {string} id - Quote's ID.
      * @param {'upvote' | 'downvote' | null} voteType - The vote to cast or
      * 'null' to clear any existing vote.
+     * @return {Promise<number>} - Returns a promise with the update quote score.
      */
     @Post(':id/vote')
     @UseGuards(JwtAuthGuard)
@@ -77,17 +78,22 @@ export class QuoteController {
         @Request() req,
         @Param('id') id: string,
         @Query('vote') voteType?: string,
-    ): Promise<QuoteReaction | void> {
+    ): Promise<number> {
         const quote: Quote = await this.quoteService.findById(id);
         if (!quote) throw new NotFoundException('Invalid quote ID');
+
         switch (voteType) {
-            case null:
-                return await this.quoteService.clearVote(quote.id, req.user.id);
-            case 'upvote':
-                return await this.quoteService.upvote(quote.id, req.user.id);
-            case 'downvote':
-                return await this.quoteService.downvote(quote.id, req.user.id);
+        case null:
+            await this.quoteService.clearVote(quote.id, req.user.id);
+            break;
+        case 'upvote':
+            await this.quoteService.upvote(quote.id, req.user.id);
+            break;
+        case 'downvote':
+            await this.quoteService.downvote(quote.id, req.user.id);
         }
+
+        return this.quoteService.getScore(id);
     }
 
     /**
