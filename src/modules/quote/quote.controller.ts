@@ -11,7 +11,7 @@ import {
 } from '@nestjs/common';
 import { QuoteService } from './quote.service';
 import { Quote } from '../../entities/quote.entity';
-import { QuoteReaction, QuoteReactionType } from '../../entities/quote-reaction.entity';
+import { QuoteReactionType } from '../../entities/quote-reaction.entity';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 /**
@@ -50,6 +50,15 @@ export class QuoteController {
         @Query('limit') limit: number = 10,
     ): Promise<Quote[]> {
         return await this.quoteService.findPaginated(page, limit, {
+            select: {
+                reactions: {
+                    id: true,
+                    type: true,
+                    user: {
+                        id: true,
+                    },
+                },
+            },
             where: {
                 reactions: {
                     type: QuoteReactionType.Upvote,
@@ -57,6 +66,12 @@ export class QuoteController {
             },
             order: {
                 reactions: { id: 'DESC' },
+            },
+            relations: {
+                user: true,
+                reactions: {
+                    user: true,
+                },
             },
         });
     }
