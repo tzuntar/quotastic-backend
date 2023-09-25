@@ -5,6 +5,5 @@ export class CreateQuoteDto {
     @IsString()
     body: string;
 
-    @IsString()
     userId: string;
 }
