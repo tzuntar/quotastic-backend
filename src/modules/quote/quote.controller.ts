@@ -6,12 +6,12 @@ import {
     Param,
     Post,
     Query,
-    Request, UseGuards,
+    Request,
+    UseGuards,
     UseInterceptors,
 } from '@nestjs/common';
 import { QuoteService } from './quote.service';
 import { Quote } from '../../entities/quote.entity';
-import { QuoteReactionType } from '../../entities/quote-reaction.entity';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 /**
@@ -23,18 +23,22 @@ export class QuoteController {
     constructor(private readonly quoteService: QuoteService) {}
 
     /**
-     * Retrieves paginated quotes.
+     * Retrieves paginated quotes, sorted by the creation date.
      *
      * @param {number} page - Page number (default: 1).
      * @param {number} limit - Number of quotes per page (default: 10).
+     * @param {string} userId - Optionally filter by user.
      * @returns {Promise<Quote[]>} - Paginated list of quotes.
      */
     @Get()
     async getQuotes(
         @Query('page') page: number = 1,
         @Query('limit') limit: number = 10,
+        @Query('user') userId?: string,
     ): Promise<Quote[]> {
-        return await this.quoteService.findPaginated(page, limit);
+        return userId
+            ? await this.quoteService.findByUserPaginated(userId, page, limit)
+            : await this.quoteService.findPaginated(page, limit);
     }
 
     /**
@@ -49,31 +53,18 @@ export class QuoteController {
         @Query('page') page: number = 1,
         @Query('limit') limit: number = 10,
     ): Promise<Quote[]> {
-        return await this.quoteService.findPaginated(page, limit, {
-            select: {
-                reactions: {
-                    id: true,
-                    type: true,
-                    user: {
-                        id: true,
-                    },
-                },
-            },
-            where: {
-                reactions: {
-                    type: QuoteReactionType.Upvote,
-                },
-            },
-            order: {
-                reactions: { id: 'DESC' },
-            },
-            relations: {
-                user: true,
-                reactions: {
-                    user: true,
-                },
-            },
-        });
+        return await this.quoteService.findByTopScorePaginated(page, limit);
+    }
+
+    /**
+     * Retrieves the quote with the most likes that was
+     * published today.
+     *
+     * @returns {Promise<Quote>} - Quote of the day.
+     */
+    @Get('quote_of_the_day')
+    async getQuoteOfTheDay(): Promise<Quote> {
+        return await this.quoteService.findQuoteOfTheDay(new Date());
     }
 
     /**
@@ -98,14 +89,14 @@ export class QuoteController {
         if (!quote) throw new NotFoundException('Invalid quote ID');
 
         switch (voteType) {
-        case null:
-            await this.quoteService.clearVote(quote.id, req.user.id);
-            break;
-        case 'upvote':
-            await this.quoteService.upvote(quote.id, req.user.id);
-            break;
-        case 'downvote':
-            await this.quoteService.downvote(quote.id, req.user.id);
+            case null:
+                await this.quoteService.clearVote(quote.id, req.user.id);
+                break;
+            case 'upvote':
+                await this.quoteService.upvote(quote.id, req.user.id);
+                break;
+            case 'downvote':
+                await this.quoteService.downvote(quote.id, req.user.id);
         }
 
         return this.quoteService.getScore(id);

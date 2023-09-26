@@ -3,9 +3,10 @@ import { CreateQuoteDto } from './dto/create-quote.dto';
 import { UpdateQuoteDto } from './dto/update-quote.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Quote } from '../../entities/quote.entity';
-import { DeleteResult, FindManyOptions, FindOneOptions, Repository } from 'typeorm';
+import { Between, DeleteResult, FindManyOptions, FindOneOptions, Repository } from 'typeorm';
 import { QuoteReaction, QuoteReactionType } from '../../entities/quote-reaction.entity';
 import { AbstractService } from '../common/abstract.service';
+import { startOfDay, endOfDay } from 'date-fns';
 
 @Injectable()
 export class QuoteService extends AbstractService<Quote> {
@@ -18,8 +19,20 @@ export class QuoteService extends AbstractService<Quote> {
 
     override async findOne(options: FindOneOptions<Quote>): Promise<Quote> {
         return this.quoteRepository.findOne({
+            select: {
+                reactions: {
+                    id: true,
+                    type: true,
+                    user: {
+                        id: true,
+                    },
+                },
+            },
             relations: {
                 user: true,
+                reactions: {
+                    user: true,
+                },
             },
             ...options,
         });
@@ -27,10 +40,22 @@ export class QuoteService extends AbstractService<Quote> {
 
     override async findById(id: string, options?: FindOneOptions<Quote>): Promise<Quote> {
         return this.quoteRepository.findOne({
-            where: { id },
+            select: {
+                reactions: {
+                    id: true,
+                    type: true,
+                    user: {
+                        id: true,
+                    },
+                },
+            },
             relations: {
                 user: true,
+                reactions: {
+                    user: true,
+                },
             },
+            where: { id },
             ...options,
         });
     }
@@ -42,9 +67,23 @@ export class QuoteService extends AbstractService<Quote> {
     ): Promise<Quote[]> {
         const skip = (page - 1) * limit;
         return this.quoteRepository.find({
+            select: {
+                reactions: {
+                    id: true,
+                    type: true,
+                    user: {
+                        id: true,
+                    },
+                },
+            },
+            order: {
+                createdAt: 'DESC',
+            },
             relations: {
-                reactions: true,
                 user: true,
+                reactions: {
+                    user: true,
+                },
             },
             skip: skip,
             take: limit,
@@ -67,6 +106,50 @@ export class QuoteService extends AbstractService<Quote> {
 
     override async delete(id: string): Promise<DeleteResult> {
         return this.quoteRepository.delete({ id });
+    }
+
+    async findByUserPaginated(
+        userId: string,
+        page: number = 1,
+        limit: number = 10,
+    ): Promise<Quote[]> {
+        return this.findPaginated(page, limit, {
+            where: {
+                user: {
+                    id: userId,
+                },
+            },
+        });
+    }
+
+    async findByTopScorePaginated(
+        page: number = 1,
+        limit: number = 10
+    ): Promise<Quote[]> {
+        return this.findPaginated(page, limit, {
+            where: {
+                reactions: {
+                    type: QuoteReactionType.Upvote,
+                },
+            },
+            order: {
+                reactions: { id: 'DESC' },
+            },
+        });
+    }
+
+    async findQuoteOfTheDay(day: Date): Promise<Quote> {
+        return this.findOne({
+            where: {
+                reactions: {
+                    type: QuoteReactionType.Upvote,
+                },
+                createdAt: Between(startOfDay(day), endOfDay(day)),
+            },
+            order: {
+                reactions: { id: 'DESC' },
+            },
+        });
     }
 
     async getScore(quoteId: string): Promise<number> {
