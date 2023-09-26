@@ -64,7 +64,7 @@ export class QuoteController {
      */
     @Get('quote_of_the_day')
     async getQuoteOfTheDay(): Promise<Quote> {
-        return await this.quoteService.findQuoteOfTheDay(new Date());
+        return await this.quoteService.findQuoteOfTheDay();
     }
 
     /**

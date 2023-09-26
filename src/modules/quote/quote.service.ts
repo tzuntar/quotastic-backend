@@ -3,10 +3,9 @@ import { CreateQuoteDto } from './dto/create-quote.dto';
 import { UpdateQuoteDto } from './dto/update-quote.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Quote } from '../../entities/quote.entity';
-import { Between, DeleteResult, FindManyOptions, FindOneOptions, Repository } from 'typeorm';
+import { DeleteResult, FindManyOptions, FindOneOptions, Repository } from 'typeorm';
 import { QuoteReaction, QuoteReactionType } from '../../entities/quote-reaction.entity';
 import { AbstractService } from '../common/abstract.service';
-import { startOfDay, endOfDay } from 'date-fns';
 
 @Injectable()
 export class QuoteService extends AbstractService<Quote> {
@@ -138,18 +137,32 @@ export class QuoteService extends AbstractService<Quote> {
         });
     }
 
-    async findQuoteOfTheDay(day: Date): Promise<Quote> {
-        return this.findOne({
-            where: {
+    async findQuoteOfTheDay(): Promise<Quote> {
+        const totalQuotes = await this.quoteRepository.count();
+        const randIdx = Math.floor(Math.random() * totalQuotes);
+        const quotes = await this.find({
+            select: {
                 reactions: {
-                    type: QuoteReactionType.Upvote,
+                    id: true,
+                    type: true,
+                    user: {
+                        id: true,
+                    },
                 },
-                createdAt: Between(startOfDay(day), endOfDay(day)),
             },
             order: {
-                reactions: { id: 'DESC' },
+                createdAt: 'DESC',
             },
+            relations: {
+                user: true,
+                reactions: {
+                    user: true,
+                },
+            },
+            skip: randIdx,
+            take: 1,
         });
+        return quotes[0];
     }
 
     async getScore(quoteId: string): Promise<number> {
