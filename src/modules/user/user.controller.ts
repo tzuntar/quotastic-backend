@@ -5,6 +5,7 @@ import {
     Delete,
     Get,
     Param,
+    ParseUUIDPipe,
     Patch,
     Post,
     UseGuards,
@@ -32,7 +33,9 @@ export class UserController {
     }
 
     @Get(':id')
-    async getById(@Param('id') id: string): Promise<User> {
+    async getById(
+        @Param('id', ParseUUIDPipe) id: string,
+    ): Promise<User> {
         return this.userService.findById(id);
     }
 
@@ -44,14 +47,16 @@ export class UserController {
 
     @Delete(':id')
     @Roles('admin')
-    async deleteUser(@Param('id') id: string): Promise<DeleteResult> {
+    async deleteUser(
+        @Param('id', ParseUUIDPipe) id: string
+    ): Promise<DeleteResult> {
         return this.userService.delete(id);
     }
 
     @Patch(':id')
     @Roles('admin')
     async updateUser(
-        @Param('id') id: string,
+        @Param('id', ParseUUIDPipe) id: string,
         @Body() updateUserDto: UpdateUserDto,
     ): Promise<User> {
         return this.userService.update(id, updateUserDto);

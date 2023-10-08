@@ -2,7 +2,7 @@ import {
     Body,
     Controller,
     NotFoundException,
-    Param,
+    Param, ParseUUIDPipe,
     Patch,
     Post,
     Request,
@@ -53,7 +53,7 @@ export class UserQuoteController {
     @Patch('myquote/:id')
     async updateOwnQuote(
         @Request() req,
-        @Param('id') id: string,
+        @Param('id', ParseUUIDPipe) id: string,
         @Body() updateQuoteDto: UpdateQuoteDto,
     ): Promise<Quote> {
         const quote: Quote = await this.quoteService.findById(id);

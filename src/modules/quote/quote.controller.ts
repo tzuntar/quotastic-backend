@@ -3,7 +3,7 @@ import {
     Controller,
     Get,
     NotFoundException,
-    Param,
+    Param, ParseUUIDPipe,
     Post,
     Query,
     Request,
@@ -82,7 +82,7 @@ export class QuoteController {
     @UseGuards(JwtAuthGuard)
     async postVote(
         @Request() req,
-        @Param('id') id: string,
+        @Param('id', ParseUUIDPipe) id: string,
         @Query('vote') voteType?: string,
     ): Promise<number> {
         const quote: Quote = await this.quoteService.findById(id);
@@ -111,7 +111,7 @@ export class QuoteController {
     @Get(':id')
     @UseGuards(JwtAuthGuard)
     async getQuoteById(
-        @Param('id') id: string,
+        @Param('id', ParseUUIDPipe) id: string,
     ): Promise<Quote> {
         return await this.quoteService.findById(id);
     }
