@@ -19,6 +19,7 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { Roles } from '../../annotations/roles.decorator';
 import { RoleGuard } from '../auth/guards/role-guard.service';
+import {ScoreDataDto} from "./dto/score-data.dto";
 
 @UseGuards(JwtAuthGuard, RoleGuard)
 @UseInterceptors(ClassSerializerInterceptor)
@@ -37,6 +38,13 @@ export class UserController {
         @Param('id', ParseUUIDPipe) id: string,
     ): Promise<User> {
         return this.userService.findById(id);
+    }
+
+    @Get(':id/karma')
+    async getScoreByUserId(
+        @Param('id', ParseUUIDPipe) id: string,
+    ): Promise<ScoreDataDto> {
+        return this.userService.getScoreByUserId(id);
     }
 
     @Post()
