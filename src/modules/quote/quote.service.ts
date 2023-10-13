@@ -137,6 +137,26 @@ export class QuoteService extends AbstractService<Quote> {
         });
     }
 
+    async findByTopScoreByUserPaginated(
+        userId: string,
+        page: number = 1,
+        limit: number = 10
+    ): Promise<Quote[]> {
+        return this.findPaginated(page, limit, {
+            where: {
+                user: {
+                    id: userId,
+                },
+                reactions: {
+                    type: QuoteReactionType.Upvote,
+                },
+            },
+            order: {
+                reactions: { id: 'DESC' },
+            },
+        });
+    }
+
     async findQuoteOfTheDay(): Promise<Quote> {
         const totalQuotes = await this.quoteRepository.count();
         const randIdx = Math.floor(Math.random() * totalQuotes);
@@ -163,6 +183,24 @@ export class QuoteService extends AbstractService<Quote> {
             take: 1,
         });
         return quotes[0];
+    }
+
+    async findQuotesLikedByUser(
+        userId: string,
+        page: number = 1,
+        limit: number = 10,
+    ): Promise<Quote[]> {
+        const skip = (page - 1) * limit;
+        return this.quoteRepository.createQueryBuilder('quote')
+            .leftJoin('quote_reaction', 'reaction', 'reaction.quote = quote.id')
+            .having('reaction.user = :userId', {userId})
+            .addGroupBy('quote.id')
+            .addGroupBy('reaction.user')
+            .addGroupBy('reaction.type')
+            .andHaving('reaction.type = :likedType', {likedType: QuoteReactionType.Upvote})
+            .skip(skip)
+            .take(limit)
+            .getMany();
     }
 
     async getScore(quoteId: string): Promise<number> {

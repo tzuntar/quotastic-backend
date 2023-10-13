@@ -46,14 +46,35 @@ export class QuoteController {
      *
      * @param {number} page - Page number (default: 1).
      * @param {number} limit - Number of quotes per page (default: 10).
+     * @param {string} userId - Optionally filter by user.
      * @returns {Promise<Quote[]>} - Paginated list of top quotes.
      */
     @Get('top')
     async getTopQuotes(
         @Query('page') page: number = 1,
         @Query('limit') limit: number = 10,
+        @Query('user') userId?: string,
     ): Promise<Quote[]> {
-        return await this.quoteService.findByTopScorePaginated(page, limit);
+        return userId
+            ? await this.quoteService.findByTopScoreByUserPaginated(userId, page, limit)
+            : await this.quoteService.findByTopScorePaginated(page, limit);
+    }
+
+    /**
+     * Retrieves quotes, liked by this user.
+     *
+     * @param {string} userId - ID of the user.
+     * @param {number} page - Page number (default: 1).
+     * @param {number} limit - Number of quotes per page (default: 10).
+     * @returns {Promise<Quote[]>} - Paginated list of quotes, liked by this user.
+     */
+    @Get('liked_by_user')
+    async getQuotesLikedByUser(
+        @Query('user') userId?: string,
+        @Query('page') page: number = 1,
+        @Query('limit') limit: number = 10,
+    ): Promise<Quote[]> {
+        return await this.quoteService.findQuotesLikedByUser(userId, page, limit);
     }
 
     /**
