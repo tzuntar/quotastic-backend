@@ -190,17 +190,16 @@ export class QuoteService extends AbstractService<Quote> {
         page: number = 1,
         limit: number = 10,
     ): Promise<Quote[]> {
-        const skip = (page - 1) * limit;
-        return this.quoteRepository.createQueryBuilder('quote')
-            .leftJoin('quote_reaction', 'reaction', 'reaction.quote = quote.id')
-            .having('reaction.user = :userId', {userId})
-            .addGroupBy('quote.id')
-            .addGroupBy('reaction.user')
-            .addGroupBy('reaction.type')
-            .andHaving('reaction.type = :likedType', {likedType: QuoteReactionType.Upvote})
-            .skip(skip)
-            .take(limit)
-            .getMany();
+        return this.findPaginated(page, limit, {
+            where: {
+                reactions: {
+                    user: {
+                        id: userId,
+                    },
+                    type: QuoteReactionType.Upvote,
+                },
+            },
+        })
     }
 
     async getScore(quoteId: string): Promise<number> {
