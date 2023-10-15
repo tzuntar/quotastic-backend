@@ -1,6 +1,6 @@
 import {
     Body,
-    Controller,
+    Controller, Delete,
     NotFoundException,
     Param, ParseUUIDPipe,
     Patch,
@@ -14,6 +14,7 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CreateQuoteDto } from './dto/create-quote.dto';
 import { Quote } from '../../entities/quote.entity';
 import { UpdateQuoteDto } from './dto/update-quote.dto';
+import { DeleteResult } from 'typeorm';
 
 /**
  * Controller responsible for quote-related /me routes.
@@ -67,6 +68,28 @@ export class UserQuoteController {
             ...updateQuoteDto,
             userId: req.user.id,
         });
+    }
+
+    /**
+     * Deletes a quote owned by the current user.
+     * @param {Request} req - Request with the current auth session.
+     * @param {string} id - ID of the quote to delete.
+     * @returns {Promise<DeleteResult>} - Indicates whether the delete
+     * operation succeeded.
+     */
+    @Delete('myquote/:id')
+    async deleteOwnQuote(
+        @Request() req,
+        @Param('id', ParseUUIDPipe) id: string,
+    ): Promise<DeleteResult> {
+        const quote: Quote = await this.quoteService.findById(id);
+        if (!quote)
+            throw new NotFoundException('Invalid quote ID');
+
+        if (quote.user.id !== req.user.id)
+            throw new UnauthorizedException('You are not authorized to update this quote');
+
+        return await this.quoteService.delete(id);
     }
 
 }
