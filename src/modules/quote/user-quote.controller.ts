@@ -65,8 +65,7 @@ export class UserQuoteController {
             throw new UnauthorizedException('You are not authorized to update this quote');
 
         return await this.quoteService.update(quote.id, {
-            ...updateQuoteDto,
-            userId: req.user.id,
+            body: updateQuoteDto.body,
         });
     }
 
