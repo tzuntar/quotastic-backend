@@ -13,6 +13,8 @@ export const OrmConfig = async (configService: ConfigService): Promise<Connectio
     logging: true,
     synchronize: true,
     extra: {
-        ssl: true,
+        ssl: {
+            rejectUnauthorized: false,
+        },
     },
 });
