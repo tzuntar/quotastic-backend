@@ -12,4 +12,7 @@ export const OrmConfig = async (configService: ConfigService): Promise<Connectio
     migrations: [__dirname + '../../migrations/**/*.entity{.ts,.js}'],
     logging: true,
     synchronize: true,
+    extra: {
+        ssl: true,
+    },
 });
